@@ -1,6 +1,6 @@
 # Housing Price Prediction with MLOps
 
-This repository demonstrates a simple MLOps implementation for a housing price prediction model. It uses a pre-trained machine learning model to predict house prices based on various features and provides a user-friendly web interface for making predictions.
+This repository demonstrates a simple MLOps implementation for a housing price prediction model. It uses a machine learning model to predict house prices based on various features and provides a user-friendly web interface for making predictions.
 
 ## Dataset
 
@@ -22,7 +22,7 @@ The model is trained on the `Housing.csv` dataset, which contains the following 
 
 ## Model Information
 
-The model is a pre-trained linear regression model that predicts house prices based on the features described above. The model is saved as `model.pkl` using joblib.
+The application automatically trains a Linear Regression model on first run if no model file exists. The model is saved as `model.pkl` for future use to avoid retraining every time.
 
 ## Installation
 
@@ -30,7 +30,7 @@ Follow these steps to set up and run the application:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/housing-mlops-deployment.git
+   git clone https://github.com/goub000/housing-mlops-deployment.git
    cd housing-mlops-deployment
    ```
 
@@ -50,6 +50,8 @@ Follow these steps to set up and run the application:
    pip install -r requirements.txt
    ```
 
+4. Ensure the `Housing.csv` file is in the repository root directory.
+
 ## Usage
 
 Run the application with:
@@ -58,7 +60,13 @@ Run the application with:
 python app.py
 ```
 
-This will start a local Gradio server, typically at http://127.0.0.1:7860/. Open this URL in your web browser to access the application.
+When you run the application for the first time, it will:
+1. Check if a trained model exists
+2. If not, automatically train a new model using the Housing.csv dataset
+3. Save the model for future use
+4. Start the Gradio web server (typically at http://127.0.0.1:7860/)
+
+Open the provided URL in your web browser to access the application.
 
 ## How to Use the App
 
@@ -70,8 +78,9 @@ This will start a local Gradio server, typically at http://127.0.0.1:7860/. Open
 
 This project follows MLOps best practices:
 
-1. **Version Control**: All code, data, and models are tracked in Git
+1. **Version Control**: All code and data are tracked in Git
 2. **Reproducibility**: Requirements are frozen in requirements.txt
-3. **Model Packaging**: Pre-trained model is saved using joblib
-4. **Web Deployment**: Easy deployment with Gradio
-5. **Documentation**: Clear README with usage instructions
+3. **Automated Model Training**: The app automatically trains the model if needed
+4. **Model Persistence**: Trained model is saved using joblib for reuse
+5. **Web Deployment**: Easy deployment with Gradio
+6. **Documentation**: Clear README with usage instructions
