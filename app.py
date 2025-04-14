@@ -1,19 +1,69 @@
 import gradio as gr
 import pandas as pd
+import numpy as np
 import joblib
 import os
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
 
-# Load the pre-trained model
+# Check if model exists, if not train it
+def ensure_model_exists():
+    if not os.path.exists('model.pkl'):
+        print("Model not found. Training a new model...")
+        
+        # Check if dataset exists
+        if not os.path.exists('Housing.csv'):
+            raise FileNotFoundError("Housing.csv not found. Please ensure the dataset is in the current directory.")
+        
+        # Load the dataset
+        data = pd.read_csv('Housing.csv')
+        
+        # Convert categorical yes/no to 1/0
+        for col in ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea']:
+            data[col] = data[col].apply(lambda x: 1 if x.lower() == 'yes' else 0)
+        
+        # Define features and target
+        X = data.drop('price', axis=1)
+        y = data['price']
+        
+        # Create pipeline with preprocessing and model
+        categorical_features = ['furnishingstatus']
+        categorical_transformer = OneHotEncoder(drop='first')
+        
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('cat', categorical_transformer, categorical_features)
+            ],
+            remainder='passthrough'
+        )
+        
+        pipeline = Pipeline([
+            ('preprocessor', preprocessor),
+            ('regressor', LinearRegression())
+        ])
+        
+        # Fit the pipeline
+        pipeline.fit(X, y)
+        
+        # Save the model
+        joblib.dump(pipeline, 'model.pkl')
+        print("Model trained and saved successfully!")
+    else:
+        print("Using existing model.pkl")
+
+# Call the function to ensure model exists
+ensure_model_exists()
+
+# Now load the model (which should exist)
 model = joblib.load('model.pkl')
 
 # Define feature names
 feature_names = ['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad', 
                 'guestroom', 'basement', 'hotwaterheating', 
                 'airconditioning', 'parking', 'prefarea', 'furnishingstatus']
-
-# Define categorical features for conversion
-categorical_features = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 
-                       'airconditioning', 'prefarea', 'furnishingstatus']
 
 # Function to map yes/no to 1/0
 def convert_yes_no(value):
@@ -44,17 +94,11 @@ def predict_price(area, bedrooms, bathrooms, stories, mainroad, guestroom,
     
     # Handle furnishingstatus differently as it has three categories
     if furnishingstatus == "furnished":
-        input_data['furnishingstatus_furnished'] = [1]
-        input_data['furnishingstatus_semi-furnished'] = [0]
-        input_data['furnishingstatus_unfurnished'] = [0]
+        input_data['furnishingstatus'] = ['furnished']
     elif furnishingstatus == "semi-furnished":
-        input_data['furnishingstatus_furnished'] = [0]
-        input_data['furnishingstatus_semi-furnished'] = [1]
-        input_data['furnishingstatus_unfurnished'] = [0]
+        input_data['furnishingstatus'] = ['semi-furnished']
     else:  # unfurnished
-        input_data['furnishingstatus_furnished'] = [0]
-        input_data['furnishingstatus_semi-furnished'] = [0]
-        input_data['furnishingstatus_unfurnished'] = [1]
+        input_data['furnishingstatus'] = ['unfurnished']
     
     # Convert to DataFrame
     input_df = pd.DataFrame(input_data)
